@@ -1,95 +1,139 @@
 #include <iostream>
 #include <vector>
-#include <cassert>
-#include <random>
-#include <algorithm>
+#include <chrono>
 
-size_t LowerBound(const std::vector<int>& data, int elem) {
-    size_t left = 0, right = data.size();
-    while (left < right) {
-        size_t middle = left + (right - left) / 2;
-        if (data[middle] < elem) {
-            left = middle + 1;
-        } else {
-            right = middle;
+
+template <typename T>
+class Stack {
+private:
+    std::vector<T> array;
+public:
+    void push(const T);
+    T pop();
+    T getTop();
+    bool isempty();
+};
+
+
+template <typename T>
+void Stack<T>::push(const T val) {
+    array.push_back(val);
+}
+
+
+template <typename T>
+T Stack<T>::pop() {
+    if (not array.empty()) {
+        array.pop_back();
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+template <typename T>
+T Stack<T>::getTop() {
+    if (not array.empty()) {
+        return array[array.size() - 1];
+    }
+    else {
+        return '*';
+    }
+}
+
+
+template <typename T>
+bool Stack<T>::isempty() {
+    return array.empty();
+}
+
+
+std::string ReadString() {
+    std::string Mystr;
+    std::cin >> Mystr;
+    return Mystr;
+}
+
+
+bool isopen(char val) {
+    if (val == '(' or val == '{' or val == '[') {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+bool ispair(char val_1, char val_2) {
+    if ((val_1 == '(' and val_2 == ')') or (val_1 == '[' and val_2 == ']') or (val_1 == '{' and val_2 == '}')) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
+
+void answer(std::string Mystr) {
+    Stack<char> symbols;
+    size_t ans = 0;
+    bool ind = true;
+    for (size_t i = 0; i < Mystr.size(); ++i) {
+        ans = i + 1;
+        if (isopen(Mystr[i])) {
+            symbols.push(Mystr[i]);
+        }
+        else {
+            if (ispair(symbols.getTop(), Mystr[i])) {
+                symbols.pop();
+            }
+            else {
+                ans = i;
+                ind = false;
+                break;
+            }
         }
     }
-    return left;
+    if (ind) {
+        std::cout << "CORRECT" << std::endl;
+    }
+    else {
+        std::cout << ans << std::endl;
+    }
 }
+
 
 void UnitTests() {
-    assert(LowerBound({}, 8) == 0);
-    assert(LowerBound({2}, 0) == 0);
-    assert(LowerBound({2}, 2) == 0);
-    assert(LowerBound({2}, 3) == 1);
-    assert(LowerBound({0, 3}, 2) == 1);
-    assert(LowerBound({0, 3}, 4) == 2);
+    answer("(((((((((((]");
+    answer("(([])){}[[]]((())){}{}{}[]");
+    answer("");
+    answer("[}");
+    answer("()()()()()()()()()()()()()()()()()()()()");
+    answer("[(]())]{}");
+    answer("]())(");
+    answer("()){()()}");
 }
 
-size_t LowerBoundLinear(const std::vector<int>& data, int elem) {
-    for (size_t i = 0; i < data.size(); ++i) {
-        if (data[i] >= elem) {
-            return i;
-        }
-    }
-    return data.size();
-}
-
-std::vector<int> GenRandomArray(std::mt19937 *gen, size_t count, int from, int to) {
-    std::uniform_int_distribution<int> dist(from, to);
-    std::vector<int> data(count);
-    for (int& cur : data) {
-        cur = dist(*gen);
-    }
-    return data;
-}
 
 void StressTest() {
-    std::mt19937 generator(72874);
-    const int max_value = 100;
-    const int max_size = 10;
-    std::uniform_int_distribution<int> dist(0, max_value);
-    for (int iter = 1; iter <= 100; ++iter) {
-        std::cerr << "Test " << iter << "... ";
-        auto data = GenRandomArray(&generator, max_size, 0, max_value);
-        std::sort(data.begin(), data.end());
-        int element = dist(generator);
-        auto ok_answer = LowerBoundLinear(data, element);
-        auto my_answer = LowerBound(data, element);
-        if (ok_answer == my_answer) {
-            std::cerr << "OK\n";
-        } else {
-            std::cerr << "Fail\n";
-            for (auto cur : data) {
-                std::cerr << cur << " ";
-            }
-            std::cerr << "\n";
-            std::cerr << "Searching " << element << "\n";
-            std::cerr << "Ok ans " << ok_answer << ", my ans " << my_answer << "\n";
-            break;
-        }
-    }
+    auto begin = std::chrono::steady_clock::now();
+    std::string str_1(500000, '(');
+    std::string str_2(500000, ')');
+    answer(str_1 + str_2);
+    auto end = std::chrono::steady_clock::now();
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
+    std::cout << "The time: " << elapsed_ms.count() << " ms\n";
 }
 
-std::vector<int> ReadArray() {
-    size_t count;
-    std::cin >> count;
-    std::vector<int> data(count);
-    for (int& cur : data) {
-        std::cin >> cur;
-    }
-    return data;
-}
 
 int main() {
-    // UnitTests();
-    // StressTest();
     std::ios_base::sync_with_stdio(false);
-    auto data = ReadArray();
-    auto queries = ReadArray();
-
-    for (int query : queries) {
-        std::cout << LowerBound(data, query) << "\n";
-    }
+    //auto data = ReadString();
+    //answer(data);
+    //UnitTests();
+    StressTest();
     return 0;
 }
