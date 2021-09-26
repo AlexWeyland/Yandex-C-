@@ -1,222 +1,95 @@
 #include <iostream>
-#include <string>
 #include <vector>
+#include <cassert>
+#include <random>
 #include <algorithm>
-#include <fstream>
-#include <sstream>
-using namespace std;
 
-class Cell{
-public:
-    int item;
-    string name;
-    string surname;
-    string fname;
-    string number;
-    
-    void print() {
-        std:: cout << item << " " << surname << " " << name << " " << fname << " " << number << endl;
+size_t LowerBound(const std::vector<int>& data, int elem) {
+    size_t left = 0, right = data.size();
+    while (left < right) {
+        size_t middle = left + (right - left) / 2;
+        if (data[middle] < elem) {
+            left = middle + 1;
+        } else {
+            right = middle;
+        }
     }
-    
-};
-
-bool comp (Cell x, Cell y) {
- 
-  return x.surname < y.surname;
- 
+    return left;
 }
 
-class PhoneBook{
-public:
-    vector <Cell> entrys;
-    
-    void edit(int number) {
-        entrys[number - 1].print();
-        std:: cout << "Введите новое имя\n";
-        std:: cin >> entrys[number - 1].name;
-        std:: cout << "Введите новую фамилию\n";
-        std:: cin >> entrys[number - 1].surname;
-        std:: cout << "Введите новое отчество\n";
-        std:: cin >> entrys[number - 1].fname;
-        std:: cout << "Введите новый номер\n";
-        std:: cin >> entrys[number - 1].number;
-    }
-    
-    void print_all() {
-        for (auto val: entrys)
-            val.print();
-    }
-    
-    void swap(int a, int b) {
-        Cell temporary;
-        int temp;
-        temporary = entrys[a - 1];
-        entrys[a - 1] = entrys[b - 1];
-        entrys[b - 1] = temporary;
-        temp = entrys[a - 1].item;
-        entrys[a - 1].item = entrys[b - 1].item;
-        entrys[b - 1].item = temp;
-    }
-    
-    void exit() {
-        ofstream fout("/Users/aleksandr/Desktop/output.txt");
-        for (auto val: entrys)
-            fout << val.item << " " << val.surname << " " << val.name << " " << val.fname << " " << val.number << endl;
-        fout.close();
-    }
-    
-    void add() {
-        Cell new_contact;
-        if (entrys.size() == 0) {
-            new_contact.item = 1;
-        } else {
-            new_contact.item = entrys.back().item + 1;
-        }
-        std:: cout << "Введите имя нового контакта\n";
-        std:: cin >> new_contact.name;
-        std:: cout << "Введите фамилию нового контакта\n";
-        std:: cin >> new_contact.surname;
-        std:: cout << "Введите отчество нового контакта\n";
-        std:: cin >> new_contact.fname;
-        std:: cout << "Введите номер нового контакта\n";
-        std:: cin >> new_contact.number;
-        entrys.push_back(new_contact);
-    }
-    
-    void
-    del(int number) {
-        entrys.erase(entrys.begin() + number - 1);
-        for (int i = number - 1; i < entrys.size(); ++i)
-            entrys[i].item = entrys[i].item - 1;
-    }
-    
-    void transfer(int number, int place) {
-        if (place <= entrys.size()) {
-            Cell tem;
-            if (number < place) {
-                for (int i=number - 1; i < place - 1; ++i) {
-                    Cell temporary;
-                    int temp;
-                    temporary = entrys[i];
-                    entrys[i] = entrys[i+1];
-                    entrys[i+1] = temporary;
-                    temp = entrys[i].item;
-                    entrys[i].item = entrys[i+1].item;
-                    entrys[i+1].item = temp;
-                }
-            } else {
-                for (int i=place - 1; i > number - 1; --i) {
-                    Cell temporary;
-                    int temp;
-                    temporary = entrys[i];
-                    entrys[i] = entrys[i-1];
-                    entrys[i-1] = temporary;
-                    temp = entrys[i].item;
-                    entrys[i].item = entrys[i-1].item;
-                    entrys[i-1].item = temp;
-                }
-            }
-        }
-        else{
-            std:: cout << "Неверное место";
-        }
-    }
-    
-    void search(string given) {
-        int p;
-        for (auto val: entrys) {
-            p = val.number.find(given);
-            if (p == 0) {
-                val.print();
-            }
-        }
-    }
-    
-    void alf() {
-        vector <Cell> dubl;
-        dubl = entrys;
-        sort (dubl.begin(), dubl.end(), comp);
-        for (auto val: dubl)
-            val.print();
-    }
-    
-    void myadd(Cell newcont) {
-        entrys.push_back(newcont);
-    }
-    
-};
+void UnitTests() {
+    assert(LowerBound({}, 8) == 0);
+    assert(LowerBound({2}, 0) == 0);
+    assert(LowerBound({2}, 2) == 0);
+    assert(LowerBound({2}, 3) == 1);
+    assert(LowerBound({0, 3}, 2) == 1);
+    assert(LowerBound({0, 3}, 4) == 2);
+}
 
-bool file_notempty(std::ifstream& pFile) {
-    return pFile.peek() != std::ifstream::traits_type::eof();
+size_t LowerBoundLinear(const std::vector<int>& data, int elem) {
+    for (size_t i = 0; i < data.size(); ++i) {
+        if (data[i] >= elem) {
+            return i;
+        }
+    }
+    return data.size();
+}
+
+std::vector<int> GenRandomArray(std::mt19937 *gen, size_t count, int from, int to) {
+    std::uniform_int_distribution<int> dist(from, to);
+    std::vector<int> data(count);
+    for (int& cur : data) {
+        cur = dist(*gen);
+    }
+    return data;
+}
+
+void StressTest() {
+    std::mt19937 generator(72874);
+    const int max_value = 100;
+    const int max_size = 10;
+    std::uniform_int_distribution<int> dist(0, max_value);
+    for (int iter = 1; iter <= 100; ++iter) {
+        std::cerr << "Test " << iter << "... ";
+        auto data = GenRandomArray(&generator, max_size, 0, max_value);
+        std::sort(data.begin(), data.end());
+        int element = dist(generator);
+        auto ok_answer = LowerBoundLinear(data, element);
+        auto my_answer = LowerBound(data, element);
+        if (ok_answer == my_answer) {
+            std::cerr << "OK\n";
+        } else {
+            std::cerr << "Fail\n";
+            for (auto cur : data) {
+                std::cerr << cur << " ";
+            }
+            std::cerr << "\n";
+            std::cerr << "Searching " << element << "\n";
+            std::cerr << "Ok ans " << ok_answer << ", my ans " << my_answer << "\n";
+            break;
+        }
+    }
+}
+
+std::vector<int> ReadArray() {
+    size_t count;
+    std::cin >> count;
+    std::vector<int> data(count);
+    for (int& cur : data) {
+        std::cin >> cur;
+    }
+    return data;
 }
 
 int main() {
-    PhoneBook book;
-    string answer, c, d, s, word;
-    int a, b, i;
-    string words[5];
-    std:: ifstream fin("/Users/aleksandr/Desktop/output.txt");
-    if (file_notempty(fin)) {
-        while (getline(fin, s)) {
-            cout << s << endl;
-            stringstream ss(s);
-            i = 0;
-            while (ss>>word) {
-                words[i] = word;
-                i ++;
-            }
-            Cell contact;
-            i = std::stoi(words[0]);
-            contact.item = i;
-            contact.surname = words[1];
-            contact.name = words[2];
-            contact.fname = words[3];
-            contact.number = words[4];
-            book.myadd(contact);
-        }
-    }
-    fin.close();
-    for ( ; ;) {
-        answer = "";
-        std:: cout << "Выберите команду" << endl;
-        std:: cout << "Доступные команды: add, print, edit, swap, alphabet, search, transfer, exit" << endl;
-        cin >> answer;
-        if (answer == "exit") {
-            book.exit();
-            break;
-        }
-        if (answer == "swap") {
-            std:: cout << "Какие записи поменять местами?\n";
-            cin >> a >> b;
-            book.swap(a, b);
-        }
-        if (answer == "add") {
-            book.add();
-        }
-        if (answer == "alphabet") {
-            book.alf();
-        }
-        if (answer == "search") {
-            std:: cout << "Введите номер или его часть\n";
-            string phone;
-            cin >> phone;
-            book.search(phone);
-        }
-        if (answer == "transfer") {
-            std:: cout << "Введите номей записи, которую хотите перенести\n";
-            cin >> a;
-            std:: cout << "Введите куда ее перенести\n";
-            cin >> b;
-            book.transfer(a, b);
-        }
-        if (answer == "print") {
-            book.print_all();
-        }
-        if (answer == "edit") {
-            std:: cout << "Введите номер записи для редактирования\n";
-            cin >> a;
-            book.edit(a);
-        }
+    // UnitTests();
+    // StressTest();
+    std::ios_base::sync_with_stdio(false);
+    auto data = ReadArray();
+    auto queries = ReadArray();
+
+    for (int query : queries) {
+        std::cout << LowerBound(data, query) << "\n";
     }
     return 0;
 }
