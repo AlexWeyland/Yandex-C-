@@ -3,137 +3,64 @@
 #include <chrono>
 
 
-template <typename T>
-class Stack {
-private:
-    std::vector<T> array;
-public:
-    void push(const T);
-    T pop();
-    T getTop();
-    bool isempty();
-};
-
-
-template <typename T>
-void Stack<T>::push(const T val) {
-    array.push_back(val);
-}
-
-
-template <typename T>
-T Stack<T>::pop() {
-    if (not array.empty()) {
-        array.pop_back();
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-
-template <typename T>
-T Stack<T>::getTop() {
-    if (not array.empty()) {
-        return array[array.size() - 1];
-    }
-    else {
-        return '*';
-    }
-}
-
-
-template <typename T>
-bool Stack<T>::isempty() {
-    return array.empty();
-}
-
-
-std::string ReadString() {
-    std::string Mystr;
-    std::cin >> Mystr;
-    return Mystr;
-}
-
-
-bool isopen(char val) {
-    if (val == '(' or val == '{' or val == '[') {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-
-bool ispair(char val_1, char val_2) {
-    if ((val_1 == '(' and val_2 == ')') or (val_1 == '[' and val_2 == ']') or (val_1 == '{' and val_2 == '}')) {
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-
-void answer(std::string Mystr) {
-    Stack<char> symbols;
-    size_t ans = 0;
-    bool ind = true;
-    for (size_t i = 0; i < Mystr.size(); ++i) {
-        ans = i + 1;
-        if (isopen(Mystr[i])) {
-            symbols.push(Mystr[i]);
-        }
-        else {
-            if (ispair(symbols.getTop(), Mystr[i])) {
-                symbols.pop();
-            }
-            else {
-                ans = i;
-                ind = false;
-                break;
-            }
+std::vector<std::vector<int> > ReadData(int amount, int lenght) {
+    std::vector<std::vector<int> > data(amount, std::vector<int> (lenght));
+    for (auto &array : data) {
+        for (auto &elem : array) {
+            std::cin >> elem;
         }
     }
-    if (ind) {
-        std::cout << "CORRECT" << std::endl;
+    return data;
+}
+
+
+int Search(std::vector<int> inc_array, std::vector<int> dec_array, int lenght) {
+    int first = 0;
+    int last = lenght - 1;
+    while (last - first > 1) {
+        int medium = (last - first) / 2 + first;
+        if (dec_array[medium] > inc_array[medium]) {
+            first = medium;
+        } else {
+            last = medium;
+        }
     }
-    else {
+    if (dec_array[first] <= inc_array[last]) {
+        return first;
+    } else {
+        return last;
+    }
+}
+
+
+void answer(std::vector<std::vector<int> > inc_arrays, std::vector<std::vector<int> > dec_arrays, int lenght) {
+    int cnt_question;
+    int inc_number, dec_number;
+    std::cin >> cnt_question;
+    for (int number = 0; number < cnt_question; ++number) {
+        std::cin >> inc_number >> dec_number;
+        int ans = Search(inc_arrays[inc_number - 1], dec_arrays[dec_number - 1], lenght) + 1;
         std::cout << ans << std::endl;
     }
 }
 
 
 void UnitTests() {
-    answer("(((((((((((]");
-    answer("(([])){}[[]]((())){}{}{}[]");
-    answer("");
-    answer("[}");
-    answer("()()()()()()()()()()()()()()()()()()()()");
-    answer("[(]())]{}");
-    answer("]())(");
-    answer("()){()()}");
+    
 }
 
 
 void StressTest() {
-    auto begin = std::chrono::steady_clock::now();
-    std::string str_1(500000, '(');
-    std::string str_2(500000, ')');
-    answer(str_1 + str_2);
-    auto end = std::chrono::steady_clock::now();
-    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - begin);
-    std::cout << "The time: " << elapsed_ms.count() << " ms\n";
+   
 }
 
 
 int main() {
     std::ios_base::sync_with_stdio(false);
-    //auto data = ReadString();
-    //answer(data);
-    //UnitTests();
-    StressTest();
+    int cnt_a, cnt_b, len;
+    std::cin >> cnt_a >> cnt_b >> len;
+    std::vector<std::vector<int> > data_1 = ReadData(cnt_a, len);
+    std::vector<std::vector<int> > data_2 = ReadData(cnt_b, len);
+    answer(data_1, data_2, len);
     return 0;
 }
